@@ -13,7 +13,7 @@ pygame.display.set_icon(icon)
 myfont = pygame.font.SysFont('Calibri', 35)
 
 
-board = Board('string')
+board = Board('Grids/board1.png')
 grid = board.grid
 
 running = True
@@ -44,6 +44,3 @@ while running:
 
 
     pygame.display.update()
-
-
-
