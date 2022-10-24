@@ -136,6 +136,7 @@ class Board():
         squares = []
         for i in range(len(contours)):
             contour = contours[i]
+            # FIXME
             approx = cv2.approxPolyDP(contour, 0.015*cv2.arcLength(contour, True), True)
             if len(approx) == 4:
                 squares.append(contour)
@@ -164,4 +165,3 @@ class Board():
         cv2.imwrite('img.png', self.get_square_img(board_img, squares[81]))
 
         self.grid = self.get_grid(board_img, squares)    
-Board('test')
