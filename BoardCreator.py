@@ -1,15 +1,33 @@
+from tkinter.tix import REAL
 import cv2
 import numpy as np
 import tensorflow as tf
 
 SIZE = 100
 
+WHITE  = (255,255,255)
+ORIGINAL_COLOR = (50,50,50)
+CORRECT_COLOR = (0,114,227)
+INCORRECT_COLOR = (229,92,108)
 
-class Number():
+INCORRECT_BACKGROUND_COLOR = (247,207,217)
+SELECTED_BACKGROUND_COLOR = (187,222,251)
+ADJACENT_BACKGROUND_COLOR = (226,235,243)
+SAME_VALUE_BACKGROUND_COLOR = (195,215,234)
+
+class Cell():
 
     def __init__(self, value, is_original):
         self.value = value
         self.mutable = not is_original
+        self.correct = True
+        self.cell_color = WHITE
+
+        if is_original:
+            self.value_color = ORIGINAL_COLOR
+        else:
+            self.value_color = CORRECT_COLOR
+        
 
 
 def evaluate_model(predictions):
@@ -40,11 +58,11 @@ def get_grid(predictions, nonempty_positions):
 
         for j in range(9):
             if nonempty_positions[(9*i) + j]:
-                number = Number(int(predictions[n]), True)
+                number = Cell(int(predictions[n]), True)
                 n += 1
             else:
                 number
-                number = Number(None, False)
+                number = Cell(None, False)
 
             line.append(number)
         grid.append(line)
@@ -183,59 +201,136 @@ class Board():
 
         return grid_str
 
+    def select_cell(self, i, j):
+        for y in range(9):
+            for x in range(9):
+                cell = self.grid[y][x]
+
+                if cell.cell_color != INCORRECT_BACKGROUND_COLOR:
+                    cell.cell_color = WHITE
+
+        
+        self.selected_cell = (i, j)
+
+
+        for i in range(9):
+            for j in range(9):
+                cell = self.grid[i][j]
+
+
+                # Cells in the same row or column
+                if i == self.selected_cell[0] or j == self.selected_cell[1]:
+                    if cell.cell_color != INCORRECT_BACKGROUND_COLOR:
+                        cell.cell_color = ADJACENT_BACKGROUND_COLOR
+
+                # Cells in the same nonet
+                elif (i // 3, j // 3) == (self.selected_cell[0] // 3, self.selected_cell[1] // 3):
+                    if cell.cell_color != INCORRECT_BACKGROUND_COLOR:
+                        cell.cell_color = ADJACENT_BACKGROUND_COLOR
+
+                # Cells with the same value
+                elif self.grid[self.selected_cell[0]][self.selected_cell[1]].value == self.grid[i][j].value and self.grid[self.selected_cell[0]][self.selected_cell[1]].value != None:
+                    if cell.cell_color != INCORRECT_BACKGROUND_COLOR:
+                        cell.cell_color = SAME_VALUE_BACKGROUND_COLOR
+
+
+
     def evaluate_board(self):
+        correct = True
+     
+
+        for i in range(9):
+                for j in range(9):
+                    cell = self.grid[i][j]
+
+                    cell.correct = True
+                    cell.cell_color = WHITE
+                    if cell.mutable == True:
+                        cell.value_color = CORRECT_COLOR
+                    else:
+                        cell.value_color = ORIGINAL_COLOR
+                    
+
+
+
         for i in range(9):
             row_nums = []
             column_nums = []
 
-            for j in range(9):
-                row_value = self.grid[i][j].value
+            for iteration in range(2):
+                for j in range(9):
+                    row_cell = self.grid[i][j]
+                    row_value = row_cell.value
 
-                if row_value != None:
-                    if row_value not in row_nums:
-                        row_nums.append(row_value)
-                    else:
-                        return "Row error"
+                    column_cell = self.grid[j][i]
+                    column_value = column_cell.value
 
-                column_value = self.grid[j][i]
-                
-                if column_value != None:
-                    if column_value not in column_nums:
-                        column_nums.append(column_value)
-                    else:
-                        return "Column Error"
+                    if iteration == 0:
+                        if row_value != None:
+                            row_nums.append(row_value)
+                        
+                        if column_value != None:
+                            column_nums.append(column_value)
+                    
+                    elif iteration == 1:
+                        if row_nums.count(row_value) >= 2:
+                            correct = False
+                            row_cell.correct = False
 
+                            if row_cell.mutable == True:
+                                row_cell.value_color = INCORRECT_COLOR
+                            row_cell.cell_color = INCORRECT_BACKGROUND_COLOR
+
+                        if column_nums.count(column_value) >= 2:
+                            correct = False
+                            column_cell.correct = False
+
+                            if column_cell.mutable == True:
+                                column_cell.value_color = INCORRECT_COLOR
+                            column_cell.cell_color = INCORRECT_BACKGROUND_COLOR
 
         for m in range(0, 9, 3):
             for n in range(0, 9, 3):
                 nonet_nums = []
 
-                for i in range(m, m+3):
-                    for j in range(n, n+3):
-                        nonet_value = self.grid[i][j].value
+                for iteration in range(2):
 
-                        if nonet_value != None:
-                            if nonet_value not in nonet_nums:
-                                nonet_nums.append(nonet_value)
-                            else:
-                                return "Nonet Error"
-                                
+                    for i in range(m, m+3):
+                        for j in range(n, n+3):
+                            nonet_cell = self.grid[i][j]
+                            nonet_value = nonet_cell.value
 
-        if len(nonet_nums) < 9 or len(row_nums) < 9 or len(column_nums) < 9:
+                            if iteration == 0:
+                                if nonet_value != None:
+                                    nonet_nums.append(nonet_value)
+                        
+                            elif iteration == 1:
+                                if nonet_nums.count(nonet_value) >= 2:
+                                    correct = False
+                                    nonet_cell.correct = False
+
+                                    if nonet_cell.mutable == True:
+                                        nonet_cell.value_color = INCORRECT_COLOR
+                                    nonet_cell.cell_color = INCORRECT_BACKGROUND_COLOR
+
+        self.select_cell(self.selected_cell[0], self.selected_cell[1])
+
+        if not correct:
+            return correct
+        elif len(nonet_nums) < 9 or len(row_nums) < 9 or len(column_nums) < 9:
             return "Incomplete"
-
-
-        return "SUCCESS"
+        else:
+            return correct
 
     def update_square(self, pos, digit):
         i, j = pos[0], pos[1]
         current_value = self.grid[i][j]
 
         if current_value.mutable:
-            number = Number(digit, False)
+            number = Cell(digit, False)
             self.grid[i][j] = number
 
-        print(self.evaluate_board())
+        self.evaluate_board()
 
     def __init__(self, img_path):
         board_img = cv2.imread(img_path)
@@ -254,3 +349,5 @@ class Board():
         predictions = get_predictions(nonempty_squares, False)
 
         self.grid = get_grid(predictions, nonempty_positions)
+
+        self.selected_cell = None

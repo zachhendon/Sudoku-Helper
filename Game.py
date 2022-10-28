@@ -2,6 +2,7 @@ import pygame
 from BoardCreator import Board
 
 pygame.init()
+SELECTED_COLOR = (187,222,251)
 
 screen = pygame.display.set_mode((800, 600))
 
@@ -18,11 +19,21 @@ board = Board(image_path)
 grid = board.grid
 
 
-selected_box = None
-
-
 def initialize_board(grid):
     screen.fill((255, 255, 255))
+
+
+    for i in range(9):
+            for j in range(9):
+                cell = grid[i][j]
+
+                if (i, j) == board.selected_cell:
+                    color = SELECTED_COLOR
+                else:
+                    color = cell.cell_color
+
+                pygame.draw.rect(screen, color, pygame.Rect(175 + j * 50, 75 + i * 50, 50, 50), 0, -1)
+
 
     for i in range(10):
         if i % 9 == 0:
@@ -30,33 +41,25 @@ def initialize_board(grid):
         elif i % 3 == 0:
             line_width = 3
         else:
-            line_width = 1
+            line_width = 1     
 
-        pygame.draw.line(screen, (0,0,0), (175 + i * 50, 75), (175 + i * 50, 450 + 75), line_width)
-        pygame.draw.line(screen, (0,0,0), (175, 75 + i * 50), (450 + 175, 75 + i * 50), line_width)
+        pygame.draw.line(screen, (52,72,97), (175 + i * 50, 75), (175 + i * 50, 450 + 75), line_width)
+        pygame.draw.line(screen, (52,72,97), (175, 75 + i * 50), (450 + 175, 75 + i * 50), line_width)
 
+    
     for i in range(9):
         for j in range(9):
-            number = grid[i][j]
-            if number.value != None:
-                if number.mutable == False:
-                    color = (50,50,50)
-                else:
-                    color = (140,151,200)
-                value = myfont.render(str(number.value), True, color)
+            cell = grid[i][j]
+
+            if cell.value != None:
+                value = myfont.render(str(cell.value), True, cell.value_color)
                 screen.blit(value, (175 + 17 + j * 50, 75 + 10 + i * 50))
-
-
-def select_box(pos):
-    i, j = pos[0], pos[1]
-    pygame.draw.rect(screen, (25, 25, 25), pygame.Rect(175 + j * 50, 75 + i * 50, 51, 51), 2)
-
 
 
 running = True
 while running:
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT or (event.type == pygame.KEYUP and event.key == 27):
             running = False
 
 
@@ -66,23 +69,49 @@ while running:
             j = (pos[0] - 175) // 50
 
             if i >= 0 and i <= 8 and j >= 0 and j <= 8:
-                select_box((i, j))
-                selected_box = (i, j)
+                board.select_cell(i, j)
 
 
-        if event.type == pygame.KEYUP:
-            key = chr(event.key)
+        if event.type == pygame.KEYDOWN and board.selected_cell != None:
+            key = event.key
 
-            if key.isnumeric() and selected_box != None:
-                key = int(key)
+            if key >= 49 and key <= 57:
+                key = int(chr(key))
 
-                if key >= 1 and key <= 9:
-                    board.update_square(selected_box, key)
+                board.update_square(board.selected_cell, key)
+
+            elif key == 8 or key == 127:
+                board.update_square(board.selected_cell, None)
+            
+            elif key == 1073741906:
+                # up
+                if board.selected_cell != None:
+                    if board.selected_cell[0] == 0:
+                        board.select_cell(8, board.selected_cell[1])
+                    else:
+                        board.select_cell(board.selected_cell[0] - 1, board.selected_cell[1])
+            elif key == 1073741903 or key == 9:
+                # right
+                if board.selected_cell != None:
+                    if board.selected_cell[1] == 8:
+                        board.select_cell(board.selected_cell[0], 0)
+                    else:
+                        board.select_cell(board.selected_cell[0], board.selected_cell[1] + 1)
+            elif key == 1073741905:
+                # down
+                if board.selected_cell != None:
+                    if board.selected_cell[0] == 8:
+                        board.select_cell(0, board.selected_cell[1])
+                    else:
+                        board.select_cell(board.selected_cell[0] + 1, board.selected_cell[1])
+            elif key == 1073741904:
+                # left
+                if board.selected_cell != None:
+                    if board.selected_cell[1] == 0:
+                        board.select_cell(board.selected_cell[0], 8)
+                    else:
+                        board.select_cell(board.selected_cell[0], board.selected_cell[1] - 1)
             
     initialize_board(grid)
-    if selected_box != None:
-        select_box(selected_box)
-
-
 
     pygame.display.update()
