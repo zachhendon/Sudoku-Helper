@@ -17,6 +17,7 @@ image_path = 'Grids/board1.png'
 
 board = Board(image_path)
 grid = board.grid
+solved_grid = board.solved_grid
 
 
 def initialize_board(grid):

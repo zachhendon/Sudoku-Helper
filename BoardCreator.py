@@ -1,4 +1,3 @@
-from tkinter.tix import REAL
 import cv2
 import numpy as np
 import tensorflow as tf
@@ -15,20 +14,111 @@ SELECTED_BACKGROUND_COLOR = (187,222,251)
 ADJACENT_BACKGROUND_COLOR = (226,235,243)
 SAME_VALUE_BACKGROUND_COLOR = (195,215,234)
 
-class Cell():
 
-    def __init__(self, value, is_original):
-        self.value = value
-        self.mutable = not is_original
-        self.correct = True
-        self.cell_color = WHITE
-
-        if is_original:
-            self.value_color = ORIGINAL_COLOR
+def next_cell(pos, is_forward):
+    i, j = pos[0], pos[1]
+    
+    if is_forward:
+        if j == 8:
+            i += 1
+            j = 0
         else:
-            self.value_color = CORRECT_COLOR
-        
+            j += 1
 
+    else:
+        if j == 0:
+            i -= 1
+            j = 8
+        else:
+            j -= 1
+
+    return (i, j)
+
+def backtrack(grid, pos):
+    i, j = pos[0], pos[1]
+    grid[i][j].value = None
+
+    while True:
+        i, j = next_cell((i, j), False)
+
+        cell = grid[i][j]
+
+
+
+        if cell.mutable == True:
+            return (i, j)
+
+
+def test_position(grid, pos, digit):
+    i, j = pos
+    nums = []
+
+
+    # test rows and columns
+    for n in range(9):
+        row_value = grid[n][j].value
+        column_value = grid[i][n].value
+
+        if row_value != None:
+            nums.append(row_value)
+        
+        if column_value != None:
+            nums.append(column_value)
+
+    # test nonets
+    y_start = (i // 3) * 3
+    x_start = (j // 3) * 3
+
+    for y in range(y_start, y_start+3):
+        for x in range(x_start, x_start+3):
+            nonet_value = grid[y][x].value
+
+            if nonet_value != None:
+                nums.append(nonet_value)
+
+    if digit in nums:
+        return False
+    return True
+    
+
+
+def solve_board(grid):
+
+    solved = False
+    i, j = 0, 0
+
+    while solved == False:        
+        cell = grid[i][j]  
+
+        if cell.value == None:
+            start = 1
+        else:
+            start = cell.value + 1
+
+
+        if cell.mutable == True:
+            for m in range(start, 10):
+                if test_position(grid, (i, j), m) == True:
+                    cell.value = m
+
+                    if (i, j) == (8, 8):
+                        solved = True
+                    else:
+                        i, j = next_cell((i, j), True)
+                    break
+            
+            else:         
+                i, j = backtrack(grid, (i, j))
+
+
+
+        else:
+            if (i, j) == (8, 8):
+                solved = True
+            i, j = next_cell((i, j), True)
+
+    
+    return grid
 
 def evaluate_model(predictions):
 
@@ -182,24 +272,37 @@ def get_board_square(board_img):
 
     return board_square, (w, h)
 
+class Cell():
+
+    def __init__(self, value, is_original):
+        self.value = value
+        self.mutable = not is_original
+        self.correct = True
+        self.cell_color = WHITE
+
+        if is_original:
+            self.value_color = ORIGINAL_COLOR
+        else:
+            self.value_color = CORRECT_COLOR
 
 class Board():
 
-    def __str__(self):
+    def print_grid(self, grid):
         grid_str = "|-----------------------------------|\n"
 
-        for line in self.grid:
+        for line in grid:
             grid_str += "|"
 
-            for square in line:
-                if square == None:
+            for cell in line:
+                if cell.value == None:
                     grid_str += "   |"
                 else:
-                    grid_str += f" {str(square)} |"
+                    grid_str += f" {str(cell.value)} |"
 
             grid_str += f"\n|-----------------------------------|\n"
 
-        return grid_str
+        print(grid_str)
+
 
     def select_cell(self, i, j):
         for y in range(9):
@@ -250,8 +353,6 @@ class Board():
                     else:
                         cell.value_color = ORIGINAL_COLOR
                     
-
-
 
         for i in range(9):
             row_nums = []
@@ -349,5 +450,6 @@ class Board():
         predictions = get_predictions(nonempty_squares, False)
 
         self.grid = get_grid(predictions, nonempty_positions)
+        self.solved_grid = solve_board(self.grid)
 
         self.selected_cell = None
