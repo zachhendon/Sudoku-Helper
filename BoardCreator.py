@@ -425,7 +425,8 @@ class Board():
                                         nonet_cell.value_color = INCORRECT_COLOR
                                     nonet_cell.cell_color = INCORRECT_BACKGROUND_COLOR
 
-        self.select_cell(self.selected_cell[0], self.selected_cell[1])
+        if self.selected_cell != None:
+            self.select_cell(self.selected_cell[0], self.selected_cell[1])
 
         if not correct:
             return correct
@@ -442,8 +443,7 @@ class Board():
             number = Cell(digit, False)
             self.grid[i][j] = number
 
-        if self.evaluate_board() == True:
-            print("CORRECT!!!")
+        self.evaluate_board()
 
     def __init__(self, img_path):
         board_img = cv2.imread(img_path)
@@ -466,6 +466,3 @@ class Board():
         self.solved_grid = solve_board(get_grid(predictions, nonempty_positions))
 
         self.selected_cell = None
-
-board = Board('Grids/board1.png')
-board.print_grid(board.solved_grid)
