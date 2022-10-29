@@ -1,7 +1,6 @@
 import pygame
 from BoardCreator import Board
 from PIL import ImageGrab
-import cv2
 import numpy as np
 
 running = True
@@ -24,8 +23,8 @@ BOTTOM_DISTANCE = TOP_DISTANCE + GRID_SIZE
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
-pygame.display.set_caption("Sudoku Board")
-icon = pygame.image.load('game.png')
+pygame.display.set_caption("Sudoku Helper")
+icon = pygame.image.load('Images/game.png')
 pygame.display.set_icon(icon)
 
 myfont = pygame.font.SysFont('Calibri', int(SQUARE_SIZE / 1.5))
@@ -193,7 +192,7 @@ def draw_helper_buttons():
 
 def draw_title():
     title_font = pygame.font.SysFont('Calibri', int(SQUARE_SIZE))
-    title_text = title_font.render("Zach's Sudoku Helper", True, (50, 50, 50))
+    title_text = title_font.render("Sudoku Helper", True, (50, 50, 50))
     screen.blit(title_text, ((WIDTH / 2) -
                 (title_text.get_width() / 2), SQUARE_SIZE))
 

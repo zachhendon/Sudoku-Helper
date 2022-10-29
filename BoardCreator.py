@@ -249,7 +249,7 @@ def get_squares(board_img, w, h):
 
     return squares
 
-
+# Takes an image and returns an image of the board (everything inside the outermost square)
 def get_board_square(board_img):
     board_img = cv2.cvtColor(board_img, cv2.COLOR_BGR2GRAY)
 
@@ -281,6 +281,7 @@ class Cell():
 
 class Board():
 
+    # Prints out a basic representation of the grid and its values
     def print_grid(self, grid):
         grid_str = "|-----------------------------------|\n"
 
@@ -297,6 +298,8 @@ class Board():
 
         print(grid_str)
 
+
+    # Resets the selected_cell attribute to None
     def deselect_cell(self):
         for y in range(9):
             for x in range(9):
@@ -306,6 +309,8 @@ class Board():
                     cell.cell_color = WHITE
         self.selected_cell = None
 
+
+    # Sets the selected_cell attribute to (i, j) and adjusts the cell_color of related squares accordingly
     def select_cell(self, i, j):
         i, j = int(i), int(j)
 
@@ -337,6 +342,9 @@ class Board():
                     if cell.cell_color != INCORRECT_BACKGROUND_COLOR:
                         cell.cell_color = SAME_VALUE_BACKGROUND_COLOR
 
+
+    # Evaluates the board, changing the colors of squares whether they are correct or 
+    # incorrect. Returns True if the board is fully solved
     def evaluate_board(self):
         correct = True
 
@@ -421,6 +429,8 @@ class Board():
         else:
             return correct
 
+
+    # Updates the value of the current square. Also re-evaluates the board determine if it is correct and updates colors accordingly
     def update_square(self, pos, digit):
         i, j = pos[0], pos[1]
         current_value = self.grid[i][j]

@@ -1,0 +1,6 @@
+opencv-python==4.6.0.66
+numpy==1.21.5
+tensorflow==2.10.0
+matplotlib==3.5.2
+Pillow==9.2.0
+pygame==2.1.2
