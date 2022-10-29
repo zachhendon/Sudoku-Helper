@@ -1,16 +1,5 @@
 # Sudoku Helper
 A program with the goal to allow users easily import a sudoku board and get hints. The application uses Python 3.9.7. I created this project primarily to learn basic computer vision with TensorFlow and OpenCV and 2-D game creation with PyGame.
-## Table of Contents
-- [Sudoku Helper](#sudoku-helper)
-  - [Table of Contents](#table-of-contents)
-  - [Installation](#installation)
-  - [Description](#description)
-    - [Image processing](#image-processing)
-    - [Digit prediction](#digit-prediction)
-    - [Board Solver](#board-solver)
-    - [Board Class](#board-class)
-    - [Game/UI](#gameui)
-  - [Status](#status)
 ## Installation
 The program runs on your local system
 
@@ -22,9 +11,9 @@ Install the required python libraries specified in [requirements.txt](requiremen
 
 To run the program, copy an image of a sudoku board to your clipboard and run [Game.py](Game.py)
 ## Description
-### Image processing
+### Image Processing
 The application will convert the image from your clipboard to a numpy array for image processing with OpenCV. It begins by converting it to an inverted binary image and ([finding the outermost square](https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm)). It evenly splits up this square into the 81 images that make up each square of the board. For each of the squares, it centers and resizes the digit to match the predition dataset.
-### Digit prediction
+### Digit Prediction
 A TensorFlow model is then used to predict the digit contained in each on of the squares (if it contains one). The training model was built from scratch. This was done by iterating over 200 fonts and creating centered and size-normalized images 1-9. The model was trained using a basic TensorFlow model.
 
 <img src="Images/TensorFlowModel.png" alt="drawing" width="350"/>
