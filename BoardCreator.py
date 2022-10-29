@@ -4,20 +4,20 @@ import tensorflow as tf
 
 SIZE = 100
 
-WHITE  = (255,255,255)
-ORIGINAL_COLOR = (50,50,50)
-CORRECT_COLOR = (0,114,227)
-INCORRECT_COLOR = (229,92,108)
+WHITE = (255, 255, 255)
+ORIGINAL_COLOR = (50, 50, 50)
+CORRECT_COLOR = (0, 114, 227)
+INCORRECT_COLOR = (229, 92, 108)
 
-INCORRECT_BACKGROUND_COLOR = (247,207,217)
-SELECTED_BACKGROUND_COLOR = (187,222,251)
-ADJACENT_BACKGROUND_COLOR = (226,235,243)
-SAME_VALUE_BACKGROUND_COLOR = (195,215,234)
+INCORRECT_BACKGROUND_COLOR = (247, 207, 217)
+SELECTED_BACKGROUND_COLOR = (187, 222, 251)
+ADJACENT_BACKGROUND_COLOR = (226, 235, 243)
+SAME_VALUE_BACKGROUND_COLOR = (195, 215, 234)
 
 
 def next_cell(pos, is_forward):
     i, j = pos[0], pos[1]
-    
+
     if is_forward:
         if j == 8:
             i += 1
@@ -34,6 +34,7 @@ def next_cell(pos, is_forward):
 
     return (i, j)
 
+
 def backtrack(grid, pos):
     i, j = pos[0], pos[1]
     grid[i][j].value = None
@@ -43,8 +44,6 @@ def backtrack(grid, pos):
 
         cell = grid[i][j]
 
-
-
         if cell.mutable == True:
             return (i, j)
 
@@ -53,7 +52,6 @@ def test_position(grid, pos, digit):
     i, j = pos
     nums = []
 
-
     # test rows and columns
     for n in range(9):
         row_value = grid[n][j].value
@@ -61,7 +59,7 @@ def test_position(grid, pos, digit):
 
         if row_value != None:
             nums.append(row_value)
-        
+
         if column_value != None:
             nums.append(column_value)
 
@@ -81,20 +79,18 @@ def test_position(grid, pos, digit):
     return True
 
 
-
 def solve_board(grid):
 
     solved = False
     i, j = 0, 0
 
-    while solved == False:        
-        cell = grid[i][j]  
+    while solved == False:
+        cell = grid[i][j]
 
         if cell.value == None:
             start = 1
         else:
             start = cell.value + 1
-
 
         if cell.mutable == True:
             for m in range(start, 10):
@@ -106,19 +102,17 @@ def solve_board(grid):
                     else:
                         i, j = next_cell((i, j), True)
                     break
-            
-            else:         
+
+            else:
                 i, j = backtrack(grid, (i, j))
-
-
 
         else:
             if (i, j) == (8, 8):
                 solved = True
             i, j = next_cell((i, j), True)
 
-    
     return grid
+
 
 def evaluate_model(predictions):
 
@@ -151,7 +145,6 @@ def get_grid(predictions, nonempty_positions):
                 number = Cell(int(predictions[n]), True)
                 n += 1
             else:
-                number
                 number = Cell(None, False)
 
             line.append(number)
@@ -218,7 +211,6 @@ def get_adjusted_squares(squares):
         height, width = (y2 - y1), (x2 - x1)
 
         digit_img = adjusted_square[y1:y2, x1:x2]
-        cv2.imwrite(f"Images/{n}.png", digit_img)
 
         left_dim = (SIZE // 2) - (width // 2)
         right_dim = (SIZE // 2) + (width // 2)
@@ -272,6 +264,7 @@ def get_board_square(board_img):
 
     return board_square, (w, h)
 
+
 class Cell():
 
     def __init__(self, value, is_original):
@@ -284,6 +277,7 @@ class Cell():
             self.value_color = ORIGINAL_COLOR
         else:
             self.value_color = CORRECT_COLOR
+
 
 class Board():
 
@@ -312,7 +306,6 @@ class Board():
                     cell.cell_color = WHITE
         self.selected_cell = None
 
-
     def select_cell(self, i, j):
         i, j = int(i), int(j)
 
@@ -323,14 +316,11 @@ class Board():
                 if cell.cell_color != INCORRECT_BACKGROUND_COLOR:
                     cell.cell_color = WHITE
 
-        
         self.selected_cell = (i, j)
-
 
         for i in range(9):
             for j in range(9):
                 cell = self.grid[i][j]
-
 
                 # Cells in the same row or column
                 if i == self.selected_cell[0] or j == self.selected_cell[1]:
@@ -347,23 +337,19 @@ class Board():
                     if cell.cell_color != INCORRECT_BACKGROUND_COLOR:
                         cell.cell_color = SAME_VALUE_BACKGROUND_COLOR
 
-
-
     def evaluate_board(self):
         correct = True
-     
 
         for i in range(9):
-                for j in range(9):
-                    cell = self.grid[i][j]
+            for j in range(9):
+                cell = self.grid[i][j]
 
-                    cell.correct = True
-                    cell.cell_color = WHITE
-                    if cell.mutable == True:
-                        cell.value_color = CORRECT_COLOR
-                    else:
-                        cell.value_color = ORIGINAL_COLOR
-                    
+                cell.correct = True
+                cell.cell_color = WHITE
+                if cell.mutable == True:
+                    cell.value_color = CORRECT_COLOR
+                else:
+                    cell.value_color = ORIGINAL_COLOR
 
         for i in range(9):
             row_nums = []
@@ -380,10 +366,10 @@ class Board():
                     if iteration == 0:
                         if row_value != None:
                             row_nums.append(row_value)
-                        
+
                         if column_value != None:
                             column_nums.append(column_value)
-                    
+
                     elif iteration == 1:
                         if row_nums.count(row_value) >= 2:
                             correct = False
@@ -415,7 +401,7 @@ class Board():
                             if iteration == 0:
                                 if nonet_value != None:
                                     nonet_nums.append(nonet_value)
-                        
+
                             elif iteration == 1:
                                 if nonet_nums.count(nonet_value) >= 2:
                                     correct = False
@@ -445,9 +431,8 @@ class Board():
 
         self.evaluate_board()
 
-    def __init__(self, img_path):
-        board_img = cv2.imread(img_path)
-        board_img = np.invert(board_img)
+    def __init__(self, img):
+        board_img = np.invert(img)
 
         board_square_img, (board_width,
                            board_height) = get_board_square(board_img)
@@ -463,6 +448,7 @@ class Board():
 
         self.grid = get_grid(predictions, nonempty_positions)
 
-        self.solved_grid = solve_board(get_grid(predictions, nonempty_positions))
+        self.solved_grid = solve_board(
+            get_grid(predictions, nonempty_positions))
 
         self.selected_cell = None
